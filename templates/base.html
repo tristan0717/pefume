@@ -1,0 +1,82 @@
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.css">
+    
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Daily Perfume{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+</head>
+<body data-auth="{{ '1' if current_user.is_authenticated else '0' }}">
+  <!-- 상단 네비게이션 (그라디언트, 글래스) -->
+  <nav class="nav nav--pretty">
+    <div class="nav__left">
+        <a class="brand brand--dot" href="{{ url_for('recommend.home') }}">Daily Perfume</a>
+    </div>
+
+    <div class="nav__right">
+      {% if current_user.is_authenticated %}
+        <span class="nav__hello">
+          안녕하세요, <strong>
+          {# 이메일 앞부분을 이름처럼 사용 #}
+          {{ (current_user.email|default('')).split('@')[0] }}
+          </strong>님
+        </span>
+
+        <!-- 내 향수(최근 추천) 드롭다운 -->
+        <div class="dropdown" id="nav-my">
+          <button class="btn btn--ghost dropdown__toggle">내 향수 ▾</button>
+          <div class="dropdown__menu">
+            <div class="dropdown__header">
+              최근 추천 <a class="link" href="{{ url_for('recommend.history') }}">전체보기</a>
+            </div>
+            <ul class="dropdown__list" id="nav-my-list">
+              <li class="muted">불러오는 중…</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 날씨 요약 칩 (로그인 시 자동 로드) -->
+        <div class="nav__weather" id="nav-weather">
+          <span class="muted">날씨 불러오는 중…</span>
+        </div>
+
+        <a class="btn btn--ghost" href="{{ url_for('auth.logout') }}">로그아웃</a>
+      {% else %}
+        <form class="nav__form" action="{{ url_for('auth.login') }}" method="post">
+          <input type="email" name="email" placeholder="이메일" required>
+          <input type="password" name="password" placeholder="비밀번호" required>
+          <button class="btn btn--primary" type="submit">로그인</button>
+        </form>
+        <a class="btn btn--ghost" href="{{ url_for('auth.register') }}">회원가입</a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <!-- 플래시 -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash">
+        {% for category, msg in messages %}
+          <div class="flash__item flash__item--{{ category }}">{{ msg }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- 로딩 오버레이 -->
+  <div id="loading-overlay" class="overlay" style="display:none;">
+    <div class="spinner"></div>
+    <div class="overlay__text">처리 중…</div>
+  </div>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

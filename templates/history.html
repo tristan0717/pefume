@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}추천 이력{% endblock %}
+{% block content %}
+<section class="card">
+  <h1 class="h1">내 추천 이력</h1>
+
+  <ul class="history">
+    {% for rec in history %}
+      <li class="history__item">
+        <!-- 상단 메타 -->
+        <div class="history__meta">
+          <span class="history__time">{{ rec.queried_at }}</span>
+          {% if rec.user_cat %}<span class="chip">입력: {{ rec.user_cat }}</span>{% endif %}
+          {% if rec.weather_desc %}<span class="chip chip--soft">날씨: {{ rec.weather_desc }}</span>{% endif %}
+        </div>
+
+        <!-- 추천 요약 리스트 (상위 5개 등 서버에서 추려 전달됨) -->
+        <div class="results" style="margin-top:10px">
+          <ol class="perfume-list" style="list-style:none; padding:0; margin:0">
+            {# dict 메서드 충돌 방지: 안전하게 키 조회 #}
+            {% set items = rec.get('items_list', rec.get('items', [])) %}
+            {% for p in items %}
+              <li class="perfume" style="padding:10px 0; border-bottom:1px dashed var(--border)">
+                <div class="perfume__main">
+                  <strong>{{ p.brand or p.Brand }}</strong> – {{ p.name or p.Name }}
+                  {% set y = p.year if p.year is defined else p.Year if p.Year is defined else None %}
+                  {% if y %} ({{ y }}){% endif %}
+                </div>
+                {# 필요하면 상세 정보 열기: 주석 해제해서 사용
+                <div class="muted">카테고리: {{ p.categorys or p.Categorys }}</div>
+                <div class="muted">노트: {{ p.note or p.Note }}</div>
+                #}
+              </li>
+            {% endfor %}
+          </ol>
+        </div>
+
+        <!-- 원본 JSON 보기 (디버그/검증용) -->
+        {% if rec.raw_items %}
+        <details class="history__details" style="margin-top:10px">
+          <summary>원본 JSON 보기</summary>
+          <pre class="pre">{{ rec.raw_items | tojson(indent=2) }}</pre>
+        </details>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}
+

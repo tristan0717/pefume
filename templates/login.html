@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}로그인{% endblock %}
+{% block content %}
+<section class="card card--narrow">
+  <h1 class="h1">로그인</h1>
+  <form method="post" class="form">
+    <input name="email" type="email" placeholder="이메일" required>
+    <input name="password" type="password" placeholder="비밀번호" required>
+    <button type="submit" class="btn btn--primary">로그인</button>
+  </form>
+  <div class="muted">계정이 없으신가요? <a href="{{ url_for('auth.register') }}">회원가입</a></div>
+</section>
+{% endblock %}

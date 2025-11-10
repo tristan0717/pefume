@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Discover – Daily Perfume</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <style>
+    :root{ --accent:#b99ad6; }
+
+    html,body{ height:auto; overflow-y:auto; } /* 페이지 스크롤 허용 */
+
+    .discover-shell{width:min(1100px,92vw);margin:0 auto; padding-top:20px;}
+    .feed__tip{ background:#fff; border-radius:12px; padding:12px; color:#6f6a63; font-size:13px; margin-bottom:8px; }
+
+    /* ===== 타임라인(대화처럼 위→아래로 쌓임) ===== */
+    .chat-feed{
+      display:flex; flex-direction:column; gap:18px;
+      padding:18px 0 140px;   /* 고정 프롬프트 공간만큼 하단 여백 */
+    }
+
+    /* 사용자 말풍선(오른쪽) */
+    .msg.user{
+      align-self:flex-end; max-width:65%;
+      background:var(--accent); color:#fff;
+      border-radius:16px; padding:10px 14px;
+      box-shadow:0 6px 16px rgba(185,154,214,.25);
+      opacity:0; transform:translateY(8px);
+      animation:fadeIn .28s ease forwards;
+      font-size:15px; line-height:1.45;
+    }
+
+    /* 시스템 블록(왼쪽) : 추천/AI 카드 컨테이너 */
+    .msg.ai{
+      align-self:flex-start; width:min(880px, 92vw);
+      display:flex; flex-direction:column; gap:10px;
+      opacity:0; transform:translateY(8px);
+      animation:fadeIn .28s ease forwards;
+    }
+    .msg.ai .card-list{ display:flex; flex-direction:column; gap:14px; }
+    .msg.ai .perf-card{ border:none; padding:0; margin:0; }  /* 점선/테두리 제거 */
+    .msg.ai .perf-title{ margin:0; }
+
+    /* 더보기/접기 버튼 */
+    .load-more{
+      align-self:flex-start;
+      appearance:none; cursor:pointer;
+      border:1px solid #dcd6cf; background:#fff; color:#6b6056;
+      font-weight:700; font-size:14px; padding:10px 16px; border-radius:12px;
+      transition:transform .15s, box-shadow .2s, border-color .2s, color .2s;
+    }
+    .load-more:hover{
+      transform:translateY(-1px);
+      border-color:var(--accent); color:#4d3a67; box-shadow:0 10px 28px rgba(0,0,0,.08);
+    }
+    .load-more--ghost{
+      background: transparent;
+      border: 1px solid #e6e0d9;
+      color: #8a7b6d;
+    }
+    .load-more--ghost:hover{
+      border-color: var(--accent);
+      color:#4d3a67;
+      box-shadow: 0 10px 28px rgba(0,0,0,.08);
+    }
+
+    /* 고정 프롬프트 바 */
+    .prompt-bar{
+      position:fixed; left:0; right:0; bottom:0; z-index:20;
+      background:#fff; border-top:1px solid var(--border);
+      box-shadow:0 -8px 24px rgba(0,0,0,.04);
+      padding:12px clamp(14px, 4vw, 24px) calc(12px + env(safe-area-inset-bottom));
+    }
+    .prompt-inner{width:min(1100px,92vw); margin:0 auto; display:flex; gap:8px;}
+    .prompt-inner input{
+      flex:1 1 auto; min-width:200px;
+      border:1px solid var(--border); border-radius:12px;
+      padding:12px 14px; outline:none; background:#fff; color:#232323;
+    }
+    .prompt-inner button.btn--primary{
+      background:#111; color:#fff; border:none; border-radius:12px;
+      padding:12px 16px; font-weight:700;
+    }
+    .prompt-inner button.btn--primary:hover{background:#333; transform:translateY(-1px);}
+
+    /* 노트 팝업(스크립트 유틸과 동일 스타일) */
+    .note-pop{
+      position:fixed; display:none; background:#fff; border:1px solid #ddd;
+      border-radius:12px; padding:12px 16px; z-index:3000;
+      box-shadow:0 8px 24px rgba(0,0,0,.12); max-width:320px; color:#222; line-height:1.4;
+    }
+    .note-section{margin-bottom:10px;}
+    .note-title{font-weight:700; margin-bottom:4px; font-size:14px;}
+    .note-line{display:flex; flex-wrap:wrap; gap:8px;}
+    .note-card{display:flex; flex-direction:column; align-items:center; width:80px;}
+    .note-card img.note-img{width:60px; height:60px; border-radius:8px; object-fit:cover;}
+    .note-name{font-size:12px; color:#333; margin-top:4px; text-align:center;}
+
+    @keyframes fadeIn{ from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:translateY(0)} }
+  </style>
+</head>
+
+<body>
+  <nav class="nav">
+    <div class="nav__left">
+      <a class="brand brand--dot" href="{{ url_for('recommend.home') }}">Daily Perfume</a>
+    </div>
+  </nav>
+
+  <main class="discover-shell">
+    <div class="feed__tip">
+      💡 원하는 분위기나 용도를 자연어로 입력해 보세요. 예)
+      <em>“비 오는 날 포근한 머스크”, “출근용 상큼한 시트러스, 잔향은 깨끗하게”</em>
+    </div>
+
+    <!-- 대화처럼 누적되는 타임라인 -->
+    <div id="chatFeed" class="chat-feed"></div>
+  </main>
+
+  <!-- 고정 프롬프트 -->
+  <form class="prompt-bar" id="promptForm">
+    <div class="prompt-inner">
+      <input id="promptInput" type="text" placeholder="원하는 향을 문장으로 입력하세요…" autocomplete="off" />
+      <button class="btn btn--primary" type="submit">검색</button>
+    </div>
+  </form>
+
+  <!-- 로딩 오버레이 -->
+  <div class="loading-overlay" id="loading-overlay" style="display:none;">
+    <div class="spinner"></div>
+    <p style="color:#fff">추천 생성 중…</p>
+  </div>
+
+  <!-- 팝업 컨테이너 (script.js에서 사용) -->
+  <div class="note-pop note-pop--plain" style="display:none;"></div>
+
+  <!-- 기존 전역 유틸(팝업/파서 등 포함) -->
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+  <script>
+    // ========= 유틸 =========
+    const chat = document.getElementById('chatFeed');
+    let msgSeq = 0;
+    function scrollToBottom(){ window.scrollTo({ top: document.body.scrollHeight, behavior:'smooth' }); }
+
+    // 사용자 말풍선 추가
+    function addUserBubble(text){
+      const el = document.createElement('div');
+      el.className = 'msg user';
+      el.textContent = text;
+      chat.appendChild(el);
+      scrollToBottom();
+    }
+
+    // ✅ 더보기/접기 토글이 있는 추천 결과 메시지(왼쪽)
+    function addRecMessage(results){
+      const wrap = document.createElement('div');
+      wrap.className = 'msg ai';
+
+      const listId     = `recList_msg_${++msgSeq}`;
+      const moreId     = `loadMore_msg_${msgSeq}`;
+      const collapseId = `collapse_msg_${msgSeq}`;
+
+      wrap.innerHTML = `
+        <div class="card-list" id="${listId}"></div>
+        <div style="display:flex; gap:8px;">
+          <button class="load-more" id="${moreId}" type="button">더보기</button>
+          <button class="load-more load-more--ghost" id="${collapseId}" type="button" style="display:none;">접기</button>
+        </div>
+      `;
+      chat.appendChild(wrap);
+
+      const list    = wrap.querySelector('#' + listId);
+      const btnMore = wrap.querySelector('#' + moreId);
+      const btnCol  = wrap.querySelector('#' + collapseId);
+
+      const all = Array.isArray(results) ? results : [];
+      let shown = 0;
+
+      // 리스트를 count개까지만 다시 그려줌 (더보기/접기 공통 로직)
+      function render(count){
+        list.innerHTML = '';
+        const slice = all.slice(0, count);
+
+        slice.forEach(p=>{
+          const brand = p.Brand || p.brand || "Unknown";
+          const name  = p.Name  || p.name  || "Untitled";
+          const year  = (p.Year ?? p.year ?? "") || "";
+          const noteRaw = p.Note || p.note || "";
+          const notes = parseNotes(noteRaw);
+
+          const popHTML = (notes.top.length || notes.middle.length || notes.base.length)
+            ? (noteRows("Top Notes", notes.top)
+              + noteRows("Middle Notes", notes.middle)
+              + noteRows("Base Notes", notes.base))
+            : noteRows("Notes", notes.flat);
+
+          const card = document.createElement('div');
+          card.className = 'perf-card perf-card--compact';
+          card.innerHTML = `
+            <div class="perf-title">
+              <a href="javascript:void(0)" class="hover-note" data-pop='${encodeURIComponent(popHTML)}'>${brand}</a>
+              &nbsp;—&nbsp;
+              <a href="javascript:void(0)" class="hover-note" data-pop='${encodeURIComponent(popHTML)}'>${name}</a>
+              ${year ? ` <span class="perf-meta">(${year})</span>` : ""}
+            </div>
+          `;
+
+          card.querySelectorAll('.hover-note').forEach(a=>{
+            a.addEventListener('mouseenter', ev=>{
+              const html = decodeURIComponent(a.dataset.pop || "");
+              if (html.trim()) showPop(html, ev.clientX, ev.clientY);
+            });
+            a.addEventListener('mousemove', ev=>{
+              if (_pop.style.display === "block") {
+                showPop(_pop.innerHTML, ev.clientX, ev.clientY);
+              }
+            });
+            a.addEventListener('mouseleave', hidePop);
+          });
+
+          list.appendChild(card);
+        });
+
+        shown = slice.length;
+
+        // 버튼 표시 상태 갱신
+        btnMore.style.display = (shown < all.length) ? 'inline-block' : 'none';
+        btnCol.style.display  = (shown > 5) ? 'inline-block' : 'none';
+
+        scrollToBottom();
+      }
+
+      // 초기 5개만 출력
+      render(Math.min(5, all.length));
+
+      // 더보기: +5개
+      btnMore.addEventListener('click', ()=>{
+        render(Math.min(shown + 5, all.length));
+      });
+
+      // 접기: 항상 5개로 축소
+      btnCol.addEventListener('click', ()=>{
+        render(Math.min(5, all.length));
+      });
+    }
+
+    // AI 향수 제안 메시지(왼쪽, 누적)
+    function addAiMessage(objOrRaw){
+      const wrap = document.createElement('div');
+      wrap.className = 'msg ai';
+      if(typeof objOrRaw === 'string'){
+        wrap.innerHTML = `<div class="ai-card">${objOrRaw}</div>`;
+      }else{
+        const safe = a => Array.isArray(a)? a.join(", ") : "";
+        wrap.innerHTML = `
+          <div class="ai-card">
+            <div class="ai-title" style="font-weight:800; font-size:18px;">${objOrRaw.name || "Untitled"}</div>
+            <div class="ai-meta" style="color:#8f8278; font-size:13px;">
+              ${objOrRaw.category ? `카테고리: ${objOrRaw.category}`:""}${objOrRaw.mood? ` · 무드: ${objOrRaw.mood}`:""}
+            </div>
+            <div class="ai-notes" style="margin-top:6px;">
+              ${objOrRaw.top? `<div><strong>Top</strong> — ${safe(objOrRaw.top)}</div>`:""}
+              ${objOrRaw.middle? `<div><strong>Middle</strong> — ${safe(objOrRaw.middle)}</div>`:""}
+              ${objOrRaw.base? `<div><strong>Base</strong> — ${safe(objOrRaw.base)}</div>`:""}
+            </div>
+            ${objOrRaw.description? `<p class="ai-desc" style="margin-top:8px;">${objOrRaw.description}</p>`:""}
+          </div>
+        `;
+      }
+      chat.appendChild(wrap);
+      scrollToBottom();
+    }
+
+    // ========= 프롬프트 흐름 =========
+    const form  = document.getElementById('promptForm');
+    const input = document.getElementById('promptInput');
+
+    form.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const q = input.value.trim();
+      if(!q) return;
+      addUserBubble(q);
+      input.value = "";
+
+      if(!navigator.geolocation){
+        requestAndRender(q, null, null);
+      }else{
+        navigator.geolocation.getCurrentPosition(
+          pos => requestAndRender(q, pos.coords.latitude, pos.coords.longitude),
+          _   => requestAndRender(q, null, null)
+        );
+      }
+    });
+
+    function requestAndRender(query, lat, lon){
+      showLoading();
+      fetch("/recommend", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ query, lat, lon })
+      })
+      .then(r=>r.text())
+      .then(txt=>{
+        const data = JSON.parse(txt.replace(/\bNaN\b/g,"null"));
+        addRecMessage(data.response || []);
+
+        // AI 향수 제안도 누적
+        const notes = (data.response || []).map(p=>p.Note || p.note || '');
+        return fetch("/generate-custom-fragrance",{
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify({ user_cat:query, user_note:query, weather:data.weather_description || "", notes })
+        });
+      })
+      .then(r=>r.json())
+      .then(d=>{
+        let raw = (d.generated_note || "").trim();
+        raw = raw.replace(/```(?:json)?\s*([\s\S]*?)\s*```/i,"$1").trim();
+        const s = raw.indexOf("{"), e = raw.lastIndexOf("}");
+        let jc = (s!==-1 && e!==-1) ? raw.slice(s,e+1) : raw;
+        jc = jc.replace(/(\w+)\s*:/g,'"$1":').replace(/"\s+/g,'"')
+               .replace(/[\u2018\u2019]/g,"'").replace(/[\u201C\u201D]/g,'"')
+               .replace(/'/g,'"').replace(/,\s*([}\]])/g,"$1");
+
+        try{ addAiMessage(JSON.parse(jc)); }
+        catch(_){ addAiMessage(raw); }
+      })
+      .catch(err=>{
+        addAiMessage(`<div style="color:#b00;">오류: ${String(err)}</div>`);
+      })
+      .finally(hideLoading);
+    }
+
+    function showLoading(){const o=document.getElementById("loading-overlay"); if(o) o.style.display="flex";}
+    function hideLoading(){const o=document.getElementById("loading-overlay"); if(o) o.style.display="none";}
+  </script>
+</body>
+</html>

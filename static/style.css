@@ -1,0 +1,285 @@
+/* ================= TOKENS ================= */
+:root{
+  /* 전체 배경색(한 줄로 전체 통일) */
+  --bg:#ffffff;            /* 크리미톤이면 #faf8f5 로 바꾸세요 */
+  --card:#fff;
+  --text:#232323;
+  --muted:#6f6a63;
+  --primary:#c0a080;
+  --primary-700:#9c7f59;
+  --border:#e6dfd8;
+  --chip-bg:rgba(192,160,128,.12);
+}
+
+/* ================= BASE ================= */
+*{ box-sizing:border-box }
+html,body{ margin:0; height:100% }
+body{
+  /* ⬇️ 그라데이션 제거 → 완전 단색 */
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.6 Pretendard, system-ui, -apple-system, "Noto Sans KR", sans-serif;
+}
+a{ color:var(--primary); text-decoration:none }
+a:hover{ text-decoration:underline }
+.container{ width:min(1080px,92vw); margin:24px auto 60px; }
+
+
+/* ================= NAV ================= */
+.nav{
+  position: sticky; top: 0; z-index: 2000; isolation:isolate;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:14px 18px; background:rgba(255,255,255,.86);
+  -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+}
+.nav__left,.nav__right{display:flex;align-items:center;gap:12px}
+
+/* 브랜드: 솔리드 블랙 + 포인트 점 */
+.nav .brand{
+  font-weight:900; font-size:clamp(20px,2.6vw,28px);
+  letter-spacing:.2px; line-height:1.1; color:#111;
+}
+.nav .brand--dot::after{
+  content:""; display:inline-block; width:8px; height:8px; margin-left:8px;
+  border-radius:50%; background:#b99ad6; vertical-align:middle;
+  box-shadow:0 0 0 2px rgba(185,154,214,.15);
+}
+
+/* 로그인 폼/버튼 */
+.nav__form input{
+  background:#fff; border:1px solid var(--border); color:var(--text);
+  padding:8px 10px; border-radius:10px; outline:none;
+}
+.nav__form button{ margin-left:6px; }
+.btn.btn--ghost{ background:#fff; }
+
+/* 드롭다운 */
+.dropdown{ position:relative; }
+.dropdown__toggle{
+  background:#fff; border:1px solid var(--border); color:var(--text);
+  padding:6px 12px; border-radius:10px; cursor:pointer;
+}
+.dropdown__menu{
+  position:absolute; right:0; top:calc(100% + 8px);
+  min-width:280px; padding:10px; display:none;
+  background:#fff; border:1px solid var(--border); border-radius:12px;
+  box-shadow:0 20px 50px rgba(0,0,0,.08);
+}
+.dropdown.open .dropdown__menu{ display:block; }
+
+/* 날씨 칩 */
+.nav__weather,#nav-weather{
+  background:var(--chip-bg); color:#5b4a3c; padding:6px 10px; font-size:12px;
+  border:1px solid rgba(192,160,128,.35); border-radius:999px;
+  display:flex; align-items:center; gap:6px;
+}
+
+/* ================= BUTTON / CHIP / CARD ================= */
+.btn{
+  border:1px solid var(--border);
+  background:#fff;
+  color:var(--text);
+  padding:10px 18px;
+  border-radius:12px;
+  cursor:pointer;
+  transition:transform .15s, box-shadow .2s;
+}
+.btn:hover{ transform:translateY(-1px); box-shadow:0 10px 28px rgba(0,0,0,.08) }
+
+.btn--primary{
+  background:linear-gradient(180deg,var(--primary),var(--primary-700));
+  color:#fff;
+  border:1px solid rgba(192,160,128,.45);
+}
+
+.chip{
+  background:var(--chip-bg);
+  border:1px solid rgba(192,160,128,.25);
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:13px;
+  color:#5b4a3c;
+}
+
+.card{
+  background: var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:18px;
+  box-shadow:0 8px 28px rgba(0,0,0,.06);
+  margin:14px 0;
+}
+.h2{ font-size:18px; margin:0 0 8px; font-weight:800; color:#2a221c }
+
+/* ================= FULL-BLEED + SOFT EDGE (쓰는 곳에서만) ================= */
+.full-bleed{ width:100vw; margin-left:calc(50% - 50vw); margin-right:calc(50% - 50vw) }
+.edge-soft-x{
+  -webkit-mask-image:linear-gradient(to right, transparent 0, rgba(0,0,0,.92) 2%, #000 10%, #000 90%, rgba(0,0,0,.92) 98%, transparent 100%);
+          mask-image:linear-gradient(to right, transparent 0, rgba(0,0,0,.92) 2%, #000 10%, #000 90%, rgba(0,0,0,.92) 98%, transparent 100%);
+}
+
+/* ================= HERO (좌측 정렬) ================= */
+.hero--store{
+  position:relative; display:flex; align-items:center;
+  min-height:580px; padding:120px 0; color:#fff;
+
+  /* 히어로는 이미지 위라 body 배경과 충돌 X */
+  background:#fff url("/static/img/hero-perfume.jpeg") center/cover no-repeat;
+  border:none; border-radius:0; box-shadow:none; scroll-margin-top:72px;
+}
+.hero--store::before{ content:""; position:absolute; inset:0; background:rgba(0,0,0,.30) }
+.hero__inner{ position:relative; z-index:1; width:min(1100px,92vw); margin:0 auto }
+.hero__title{ font-size:clamp(42px,6vw,76px); line-height:1.05; margin:0 0 12px; font-weight:900 }
+.hero__desc{ font-size:clamp(16px,2vw,20px); margin:0 0 18px; color:rgba(255,255,255,.96) }
+.hero__inputs{ display:flex; gap:12px; flex-wrap:wrap }
+.hero__inputs input{
+  flex:1 1 420px; min-width:280px; padding:14px 16px; border:none; outline:none; border-radius:12px;
+  background:rgba(255,255,255,.92); color:#333; font-size:16px;
+}
+.hero__chips{ margin-top:12px; display:flex; gap:8px; flex-wrap:wrap }
+@media (min-width:1200px){
+  .hero--store{ min-height:660px; padding:140px 0 }
+}
+
+/* ================= SPLIT ROWS (섹션 설명 라인) ================= */
+.section--split{ width:min(1100px,92vw); margin:34px auto 10px }
+.split{
+  display:grid; grid-template-columns: 1fr auto; align-items:center;
+  gap:18px 28px; padding:26px 0; border-top:1px solid #dcd6cf;
+}
+.split--thick{ border-top:2px solid #111 }
+.split__left{ display:grid; grid-template-columns: 180px 1fr; gap:18px }
+.split__eyebrow{ font-weight:900; font-size:28px; letter-spacing:-.3px }
+.split__desc{ color:#6b6056; font-size:16px }
+.split__cta .btn{ padding:12px 18px; border-radius:12px }
+@media (max-width:720px){
+  .split{ grid-template-columns:1fr; gap:14px }
+  .split__left{ grid-template-columns:1fr; gap:8px }
+  .split__eyebrow{ font-size:24px }
+}
+
+/* ================= SECTION TITLES (공통) ================= */
+.get-title, .benefits-title{
+  font-size:36px; font-weight:800; color:#111; letter-spacing:-0.3px; margin:0;
+}
+.get-desc, .benefits-desc{
+  color:#777; font-size:20px; font-weight:500; line-height:1.6; margin:10px 0 24px;
+}
+
+/* ================= SECTION WRAPPERS (패딩 통일 + 배경 투명) ================= */
+/* ⬇️ 섹션 배경을 body와 정확히 같게 만들기 위해 투명 처리 */
+.get-started, .benefits{
+  background: transparent;    /* was #fff */
+  border:none; border-radius:0;
+  padding:60px 40px; box-shadow:none; margin:60px auto;
+  width:min(1100px,92vw);
+}
+
+/* 제목 왼쪽 보라 원(겹치기) – 공통 베이스는 제거하고, intro 전용만 둠 */
+.section-deco{ display:flex; align-items:center; position:relative }
+
+/* ----- Get Started (좌우 나란히) ----- */
+.get-started{
+  display:grid; grid-template-columns: 1fr 2.5fr; align-items:start; gap:60px;
+}
+.get-started__intro{ display:flex; flex-direction:column; gap:12px }
+.get-started__intro .section-deco::before{
+  content:""; width:60px; height:60px; border-radius:50%; background:#b99ad6;
+  position:static; margin-right:-14px; transform:translateY(-6px); z-index:0;
+}
+.get-started__intro .get-title{ position:relative; z-index:1 }
+.get-started__intro .get-desc{ font-size:20px; color:#777; line-height:1.6; margin:10px 0 0 }
+
+.get-row{
+  display:flex; justify-content:space-between; align-items:center;
+  border-top:2px solid #000; border-bottom:1px solid #000;
+  padding:24px 0; margin-top:24px;
+}
+
+/* Get Started의 메인 CTA는 검정 유지 */
+.get-started .btn--primary{
+  background:#111; color:#fff; font-weight:700; font-size:16px;
+  padding:12px 24px; border-radius:10px; border:none; transition:all .2s ease-in-out;
+}
+.get-started .btn--primary:hover{ background:#333; transform:translateY(-1px) }
+
+/* ----- User Benefits (좌우 나란히) ----- */
+.benefits{
+  display:grid; grid-template-columns: 1fr 2.5fr; align-items:start; gap:40px;
+}
+.benefits__intro{ display:flex; flex-direction:column; justify-content:flex-start; gap:12px }
+.benefits__intro .section-deco::before{
+  content:""; width:60px; height:60px; border-radius:50%; background:#b99ad6;
+  position:static; margin-right:-14px; transform:translateY(-6px); z-index:0;
+}
+.benefits__intro .benefits-title{ position:relative; z-index:1 }
+.benefits__intro .benefits-desc{ font-size:20px; color:#777; line-height:1.6; margin:10px 0 0 }
+
+.benefits__row{
+  display:grid; grid-template-columns: repeat(3, 1fr);
+  gap:40px; justify-items:center; align-items:start;
+}
+.benefit{ text-align:center }
+.benefit__icon{ font-size:48px; margin-bottom:10px }
+.benefit__title{ font-size:24px; font-weight:800; margin:4px 0 }
+.benefit__desc{ font-size:18px; color:#333; line-height:1.5 }
+
+/* ================= RESULTS GRID ================= */
+#recList{ display:grid; grid-template-columns:1fr; gap:14px }
+@media (min-width:680px){ #recList{ grid-template-columns:repeat(2,1fr) } }
+@media (min-width:1024px){ #recList{ grid-template-columns:repeat(3,1fr) } }
+.perf-card{
+  padding:12px; border:none; border-radius:12px;
+  transition:transform .14s, box-shadow .2s, border-color .2s;
+}
+.perf-card:hover{
+  transform:translateY(-2px);
+  border-color:rgba(192,160,128,.45);
+  box-shadow:0 14px 40px rgba(0,0,0,.08);
+}
+.perf-title{ font-weight:700; color:#2a221c }
+.perf-meta{ color:#8f8278 }
+
+/* ================= OVERLAY ================= */
+.loading-overlay{
+  position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+  flex-direction:column; background:rgba(0,0,0,.25); z-index:1000;
+}
+.spinner{
+  width:42px; height:42px; border-radius:50%;
+  border:3px solid rgba(0,0,0,.12); border-top-color:var(--primary);
+  animation:spin 1s linear infinite;
+}
+@keyframes spin{ to{ transform:rotate(360deg) } }
+
+.benefit__icon svg {
+  width: 48px;
+  height: 48px;
+  stroke: #111;          /* 선 색상 (검정) */
+  stroke-width: 2px;     /* 윤곽선 두께 */
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.results-left{
+  margin-left: 72px;               /* ← 왼쪽 기준선(버블 시작 아래쪽에 맞추고 싶으면 이 값만 조절) */
+}
+
+/* 추천 카드들을 한 줄 스택으로 세워서 모두 같은 왼쪽선에서 시작 */
+#recList{
+  display: flex;
+  flex-direction: column;          /* 그리드/멀티컬럼 대신 한 줄 스택 */
+  gap: 18px;
+}
+
+/* 카드 테두리/안쪽 여백 영향 최소화 */
+.perf-card{
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+/* 텍스트 블록도 좌측선에 맞게 */
+.perf-title{ margin: 0; }
+.ai-card{ margin-left: 0; }

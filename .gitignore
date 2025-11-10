@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS / 에디터
+.DS_Store
+
+# Secrets & local files
+.env
+*.sqlite3
+app.db
+
+# uploads 등 로컬 산출물
+uploads/
+
+# 문서류 (원하면 제거)
+*.hwpx
